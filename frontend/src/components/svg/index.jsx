@@ -1,3 +1,18 @@
+export const ArrowRightArc = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      className="h-3 w-3"
+    >
+      <path
+        fill="currentColor"
+        d="M232.3 134.4l112 104L363.3 256l-18.9 17.6-112 104-17.6 16.3-32.7-35.2 17.6-16.3L266.9 280 24 280 0 280l0-48 24 0 242.9 0-67.2-62.4-17.6-16.3 32.7-35.2 17.6 16.3zM464 256c0-114.9-93.1-208-208-208l-24 0 0-48 24 0C397.4 0 512 114.6 512 256s-114.6 256-256 256l-24 0 0-48 24 0c114.9 0 208-93.1 208-208z"
+      />
+    </svg>
+  );
+};
+
 export const ArrowLeftLine = () => {
   return (
     <svg
@@ -71,6 +86,26 @@ export const EditIcon = ({ className }) => {
       <path
         fill="currentColor"
         d="M144 272L128 384l112-16L436.7 171.3l-96-96L144 272zM512 96L416 0 363.3 52.7l96 96L512 96zM32 64H0V96 480v32H32 416h32V480 320 288H384v32V448H64V128H192h32V64H192 32z"
+      />
+    </svg>
+  );
+};
+
+export const ArrowRotateRight = ({ className }) => {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      data-prefix="fasr"
+      data-icon="arrow-rotate-right"
+      className={`svg-inline--fa fa-arrow-rotate-right fa-fw fa-1x ${className}`}
+      role="img"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+    >
+      <path
+        fill="currentColor"
+        d="M472 224h24V200 56 32H448V56v80.1l-20-23.5C387 63.4 325.1 32 256 32C132.3 32 32 132.3 32 256s100.3 224 224 224c50.4 0 97-16.7 134.4-44.8l-28.8-38.4C332.2 418.9 295.7 432 256 432c-97.2 0-176-78.8-176-176s78.8-176 176-176c54.3 0 102.9 24.6 135.2 63.4l.1 .2 0 0L418.9 176H328 304v48h24H472z"
       />
     </svg>
   );

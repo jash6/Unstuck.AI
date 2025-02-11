@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { SearchMenu } from "../components/searchMenu";
 
 export default function Home() {
   const [searchVal, setSearchVal] = useState("");
@@ -178,6 +179,7 @@ export default function Home() {
           >
             Send
           </button>
+          <SearchMenu searchValue={searchVal} />
         </div>
       </div>
     </div>

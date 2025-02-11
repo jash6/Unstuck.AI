@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SearchMenu } from "./searchMenu";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export const ThreadPopUP = ({ closePop }) => {
@@ -31,6 +32,11 @@ export const ThreadPopUP = ({ closePop }) => {
                       onChange={(e) => setSearchVal(e.target.value)}
                     ></textarea>
                   </div>
+                  <SearchMenu
+                    searchValue={searchVal}
+                    fromMenu={true}
+                    closePop={() => closePop()}
+                  />
                 </div>
               </div>
             </div>
