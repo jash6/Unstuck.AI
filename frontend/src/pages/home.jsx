@@ -1,21 +1,182 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Home() {
   const [searchVal, setSearchVal] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [filePaths, setFilePaths] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Update chat history when a new message is added
+  useEffect(() => {
+    const chatContainer = document.querySelector(".chat-box");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [chatHistory]);
+
+  // Clear file input when selectedFiles is reset
+  useEffect(() => {
+    if (selectedFiles.length === 0) {
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = "";
+    }
+  }, [selectedFiles]);
+
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles(files);
+  };
+
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      alert("Please select files first.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      // Add the required Form fields
+      formData.append("user_id", "user123"); // Add a user ID (you should get this from your auth system)
+      formData.append("chat_id", "chat123"); // Add a chat ID (you should generate or get this from somewhere)
+
+      // Append files
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      // Remove the incorrect parameters (1, 1) from the axios call
+      const { data } = await axios.post(
+        "http://localhost:8000/upload/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setFilePaths((prev) => [...prev, ...data.file_paths]);
+      alert("Files uploaded successfully!");
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert(`Upload failed: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleQuery = async () => {
+    if (!searchVal.trim()) return;
+
+    const userQuery = { sender: "user", message: searchVal };
+
+    try {
+      setChatHistory((prev) => [...prev, userQuery]);
+
+      const { data } = await axios.get("http://localhost:8000/query/", {
+        params: {
+          query: searchVal,
+          user_id: "user123", // Add this
+          chat_id: "chat123", // Add this
+        },
+      });
+
+      const botResponse = { sender: "bot", message: data.response };
+      setChatHistory((prev) => [...prev, botResponse]);
+      setSearchVal("");
+    } catch (error) {
+      console.error("Query failed:", error);
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          message: "Sorry, I encountered an error processing your query.",
+        },
+      ]);
+    }
+  };
+  const handleKeyPress = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleQuery();
+    }
+  };
+
   return (
-    <div className="homepage w-full h-full mx-auto  max-w-screen-md md:px-lg px-md">
-      <div className="font-serif font-medium text-[2.25rem] text-textMain mb-lg pb-xs">
-        Hi how can I help you today? 🤗
+    <div className="w-full h-full mx-auto max-w-screen-md px-4 py-6">
+      <div className="font-serif font-medium text-3xl text-gray-800 mb-6">
+        Hi, how can I help you today? 🤗
       </div>
-      <div className="relative w-full ">
-        <div className="outline-none focus:outline-none focus:ring-borderMain font-sans flex items-center dark:bg-offsetDark dark:text-textMainDark dark:placeholder-textOffDark dark:border-borderMainDark dark:focus:ring-borderMainDark selection:bg-superDuper selection:text-textMain duration-200 transition-all bg-background border text-textMain border-borderMain focus:ring-1 placeholder-textOff shadow-sm rounded-t-md rounded-b-md text-base pb-xl p-md">
+
+      {/* Chat History */}
+      <div className="chat-box bg-gray-100 p-4 rounded-lg h-96 overflow-y-auto mb-6">
+        {chatHistory.map((chat, index) => (
+          <div
+            key={index}
+            className={`p-3 my-2 rounded-lg ${
+              chat.sender === "user"
+                ? "bg-white text-gray-800 ml-auto max-w-[80%] shadow-sm"
+                : "bg-white text-gray-800 mr-auto max-w-[80%] shadow-sm"
+            }`}
+          >
+            {chat.message}
+          </div>
+        ))}
+      </div>
+
+      {/* File Upload and Input Area */}
+      <div className="space-y-4">
+        {/* File Selection Area */}
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            onChange={handleFileChange}
+            className="flex-1 p-2 border rounded"
+            multiple
+          />
+          <button
+            onClick={handleUpload}
+            className="bg-blue-500 hover:bg-blue-600 text-black px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {isUploading ? "Uploading..." : `Upload (${selectedFiles.length})`}
+          </button>
+        </div>
+
+        {/* Selected Files Display */}
+        {selectedFiles.length > 0 && (
+          <div className="text-sm text-gray-600">
+            Selected files: {selectedFiles.map((file) => file.name).join(", ")}
+          </div>
+        )}
+
+        {/* Uploaded Files Display */}
+        {filePaths.length > 0 && (
+          <div className="text-sm text-green-600">
+            Uploaded files:{" "}
+            {filePaths.map((path) => path.split("/").pop()).join(", ")}
+          </div>
+        )}
+
+        {/* Input Area */}
+        <div className="relative">
           <textarea
             placeholder="Ask anything..."
-            className="outline-none focus:outline-none w-full font-sans duration-200 transition-all caret-superDuper  resize-none overflow-auto max-h-[50vh] selection:bg-superDuper selection:text-textMain bg-background focus:bg-background text-textMain  border-borderMain focus:ring-borderMain place-holder-textOff  rounded-t-md rounded-b-md  text-base"
-            autoComplete="off"
-            spellCheck="false"
+            className="w-full p-3 border rounded-lg resize-none h-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-          ></textarea>
+            onKeyPress={handleKeyPress}
+          />
+          <button
+            onClick={handleQuery}
+            className="w-full mt-2 bg-green-500 hover:bg-green-600 text-black py-2 px-4 rounded-lg transition-colors"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>
