@@ -5,6 +5,7 @@ export default function Home() {
   const [searchVal, setSearchVal] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  // Optionally remove filePaths if not needed
   const [filePaths, setFilePaths] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -40,15 +41,15 @@ export default function Home() {
     try {
       const formData = new FormData();
       // Add the required Form fields
-      formData.append("user_id", "user123"); // Add a user ID (you should get this from your auth system)
-      formData.append("chat_id", "chat123"); // Add a chat ID (you should generate or get this from somewhere)
+      formData.append("user_id", "user123"); // Replace with actual user ID if needed
+      formData.append("chat_id", "chat123"); // Replace with actual chat ID if needed
 
       // Append files
       selectedFiles.forEach((file) => {
         formData.append("files", file);
       });
 
-      // Remove the incorrect parameters (1, 1) from the axios call
+      // Corrected axios call without expecting file_paths from the response
       const { data } = await axios.post(
         "http://localhost:8000/upload/",
         formData,
@@ -59,8 +60,7 @@ export default function Home() {
         }
       );
 
-      setFilePaths((prev) => [...prev, ...data.file_paths]);
-      alert("Files uploaded successfully!");
+      alert(data.message); // Display the backend response message
       setSelectedFiles([]);
     } catch (error) {
       console.error("Upload failed:", error);
@@ -81,8 +81,8 @@ export default function Home() {
       const { data } = await axios.get("http://localhost:8000/query/", {
         params: {
           query: searchVal,
-          user_id: "user123", // Add this
-          chat_id: "chat123", // Add this
+          user_id: "user123", // Replace with actual user ID if needed
+          chat_id: "chat123", // Replace with actual chat ID if needed
         },
       });
 
@@ -100,6 +100,7 @@ export default function Home() {
       ]);
     }
   };
+
   const handleKeyPress = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
