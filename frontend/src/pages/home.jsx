@@ -145,10 +145,10 @@ export default function Home() {
                   key={index}
                   className="flex items-center justify-between bg-gray-50 p-2 rounded"
                 >
-                  <span className="text-m text-gray-600">{file.name}</span>
+                  <span className="text-m text-primary">{file.name}</span>
                   <button
                     onClick={() => handleDeleteFile(index)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-primary hover:text-red"
                     disabled={isUploading}
                   >
                     ×

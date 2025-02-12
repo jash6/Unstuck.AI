@@ -131,56 +131,50 @@ export default function ChatScreen() {
   };
 
   return (
-    <div
-      className={`w-full h-screen flex flex-col max-w-screen-md mx-auto px-4 py-6 ${
-        chatHistory.length === 0 ? "justify-center" : "justify-between"
-      }`}
-    >
-      <div>
-        <div
-          ref={chatContainerRef}
-          className="flex-1 bg-gray-100 p-4 rounded-lg overflow-y-auto h-96"
-        >
-          {chatHistory.map((chat, index) => (
-            <div
-              key={index}
-              className={`p-3 my-2 rounded-2xl shadow-sm ${
-                chat.sender === "user"
-                  ? "bg-extradark-gray max-w-[70%] text-white ml-auto"
-                  : "text-white mr-auto"
-              }`}
-            >
-              {chat.type === "thinking" ? (
-                <div className="flex items-center gap-2">
-                  <span>{chat.message}</span>
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-100"></div>
-                    <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-200"></div>
-                  </div>
+    <div className="w-full h-screen flex flex-col max-w-screen-md mx-auto px-4 py-6">
+      <div
+        ref={chatContainerRef}
+        className="flex-1 bg-gray-100 p-4 rounded-lg overflow-y-auto"
+      >
+        {chatHistory.map((chat, index) => (
+          <div
+            key={index}
+            className={`p-3 my-2 rounded-2xl shadow-sm ${
+              chat.sender === "user"
+                ? "bg-extradark-gray max-w-[70%] text-white ml-auto"
+                : "text-white mr-auto"
+            }`}
+          >
+            {chat.type === "thinking" ? (
+              <div className="flex items-center gap-2">
+                <span>{chat.message}</span>
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-200"></div>
                 </div>
-              ) : (
-                <>
-                  <span>{chat.message}</span>
-                  {chat.sources && chat.sources.length > 0 && (
-                    <>
-                      <div className="text-left font-small text-xs text-gray-800 mt-3">
-                        Sources
-                      </div>
-                      <div className="flex gap-2 overflow-x-auto">
-                        {chat.sources.map((source, sourceIndex) => (
-                          <SourceBox key={sourceIndex} source={source} />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ) : (
+              <>
+                <span>{chat.message}</span>
+                {chat.sources && chat.sources.length > 0 && (
+                  <>
+                    <div className="text-left font-small text-xs text-gray-800 mt-3">
+                      Sources
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {chat.sources.slice(0, 4).map((source, sourceIndex) => (
+                        <SourceBox key={sourceIndex} source={source} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        ))}
       </div>
-      <div className="w-full relative rounded-2xl">
+      <div className="w-full relative py-3">
         <textarea
           placeholder="Ask anything..."
           className="w-full p-3 pl-12 pr-12 rounded-2xl bg-extradark-gray text-white resize-none h-18 focus:outline-none"

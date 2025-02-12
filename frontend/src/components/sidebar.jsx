@@ -45,8 +45,8 @@ const Sidebar = ({
             })}
           >
             {!collapsed && (
-              <div className="h-auto group w-28 md:w-36 hover:text-primary">
-                <span className="ml-2 text-xl font-bold">Unstuck AI</span>
+              <div className="h-auto group w-28 md:w-36 text-red hover:text-primary">
+                <span className="ml-2 text-2xl font-bold">Unstuck AI</span>
               </div>
             )}
 
