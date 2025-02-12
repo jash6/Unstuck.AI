@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { Upload, Loader } from "lucide-react";
+import { useChatContext } from "../context/ChatContext";
 
 const LoadingSpinner = () => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center h-full z-50">
@@ -21,6 +22,7 @@ export default function Home() {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const dropZoneRef = useRef(null);
+  const { refreshChatList } = useChatContext();
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
@@ -69,14 +71,21 @@ export default function Home() {
     }
     setIsUploading(true);
     try {
-      const startChatUrl = user
-        ? `http://localhost:8000/start_chat/?user_id=${user.id}`
+      const userId = user
+        ? user.id
+        : localStorage.getItem("guestUserId")
+          ? localStorage.getItem("guestUserId")
+          : null;
+      const startChatUrl = userId
+        ? `http://localhost:8000/start_chat/?user_id=${userId}`
         : "http://localhost:8000/start_chat/";
 
       const response = await fetch(startChatUrl);
       const chatdata = await response.json();
       const chatId = chatdata.chat_id;
-
+      if (!user) {
+        localStorage.setItem("guestUserId", chatdata.user_id);
+      }
       const formData = new FormData();
       user
         ? formData.append("user_id", user.id)
@@ -92,6 +101,7 @@ export default function Home() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
+      refreshChatList();
       alert(data.message);
       navigate(`/chat/${chatId}`, {
         state: { userId: user ? user.id : chatdata.user_id },

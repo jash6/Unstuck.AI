@@ -37,6 +37,30 @@ export default function ChatScreen() {
     }
   }, [chatHistory]);
 
+  useEffect(() => {
+    const loadChat = async () => {
+      try {
+        const { data } = await axios.get(
+          "http://localhost:8000/chat-history/",
+          {
+            params: { user_id: userId, chat_id: chatId },
+          }
+        );
+        const transformedHistory = data.history.flatMap((entry) => [
+          { sender: "user", message: entry.query },
+          { sender: "bot", message: entry.response },
+        ]);
+        setChatHistory(transformedHistory);
+      } catch (error) {
+        console.error("Failed to load chat:", error);
+      }
+    };
+
+    if (userId && chatId) {
+      loadChat();
+    }
+  }, [chatId, userId]);
+
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
     setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
@@ -104,7 +128,7 @@ export default function ChatScreen() {
         newHistory[newHistory.length - 1] = {
           sender: "bot",
           message: data.response.response ?? data.response,
-          sources: data.sources,
+          sources: data.sources || [],
         };
         return newHistory;
       });

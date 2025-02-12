@@ -7,7 +7,7 @@ import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { defaultNavItems } from "./sideItems";
 import { useUser } from "../context/UserContext";
 import { ThreadPopUP } from "./threadPop";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Layout = (props) => {
   const [collapsed, setSidebarCollapsed] = useState(false);
@@ -16,30 +16,31 @@ const Layout = (props) => {
   const [activeMenu, setActiveMenu] = useState("Home");
   const [searchPop, setSearchPop] = useState(false);
   const { user, logout } = useUser();
+  const navigate = useNavigate();
+  // Dynamic sidebar items based on auth state
   useEffect(() => {
-    if (user) {
-      setSidebars([
-        ...defaultNavItems,
-        {
+    const baseItems = [...defaultNavItems];
+
+    const authItem = user
+      ? {
           label: "Logout",
-          onClick: logout,
-          href: "/",
+          onClick: () => {
+            logout();
+            navigate("/", {
+              replace: true,
+              state: { forceRefresh: Date.now() },
+            });
+          },
           icon: <ArrowTopRightOnSquareIcon className="w-5 h-5" />,
-          active: false,
-        },
-      ]);
-    } else {
-      setSidebars([
-        ...defaultNavItems,
-        {
+        }
+      : {
           label: "Login",
-          href: "/login",
+          onClick: () => setShowLoginPop(true),
           icon: <ArrowTopRightOnSquareIcon className="w-5 h-5" />,
-          active: false,
-        },
-      ]);
-    }
-  }, [user]);
+        };
+
+    setSidebars([...baseItems, authItem]);
+  }, [user, navigate, logout]);
   const location = useLocation();
   const showNavbar = location?.pathname !== "/library";
   console.log("isLibraryPath", showNavbar);

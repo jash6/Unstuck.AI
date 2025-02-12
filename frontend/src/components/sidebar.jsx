@@ -5,6 +5,8 @@ import { ArrowLeftLine } from "./svg";
 import { useUser } from "../context/UserContext";
 import { LoginPop } from "./pop";
 import { Link, useNavigate } from "react-router-dom";
+import { useChatContext } from "../context/ChatContext";
+import axios from "axios";
 
 const Sidebar = ({
   collapsed,
@@ -18,6 +20,31 @@ const Sidebar = ({
   const { user } = useUser();
   const [showLoginPop, setShowLoginPop] = useState(false);
   const navigate = useNavigate();
+  const [chats, setChats] = useState([]);
+  const { chatVersion } = useChatContext();
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      const userId = user
+        ? user.id
+        : !localStorage.getItem("guestUserId")
+          ? null
+          : localStorage.getItem("guestUserId");
+      if (userId) {
+        console.log("fetching chats for user", userId);
+        try {
+          if (!userId) return;
+          const response = await axios.get(
+            `http://localhost:8000/get_chats/?user_id=${userId}`
+          );
+          setChats(response.data.chats);
+        } catch (error) {
+          console.error("Failed to fetch chats:", error);
+        }
+      }
+    };
+    fetchChats();
+  }, [user, chatVersion]);
 
   return (
     <>
@@ -70,6 +97,36 @@ const Sidebar = ({
               </div>
             </button>
           </div>
+          {/* Display Chats */}
+          <div className="mt-10 px-3 flex-grow">
+            <div className="text-sm font-medium text-textMain mb-2">
+              Chat History
+            </div>
+            <ul className="space-y-2">
+              {chats.map((chat) => (
+                <li
+                  key={chat.chat_id}
+                  className="p-2 hover:bg-offsetPlus rounded cursor-pointer text-sm text-extradark-gray truncate"
+                  onClick={() =>
+                    navigate(`/chat/${chat.chat_id}`, {
+                      state: {
+                        userId: user?.id || localStorage.getItem("guestUserId"),
+                      },
+                    })
+                  }
+                >
+                  <div className="flex flex-col">
+                    <span className="truncate">
+                      {chat.documents.join(", ")}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(chat.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
           <nav className="flex-grow">
             <ul
               className={classNames({
@@ -113,7 +170,6 @@ const Sidebar = ({
               })}
             </ul>
           </nav>
-
           <div
             className={classNames({
               "grid place-content-stretch p-4 ": true,

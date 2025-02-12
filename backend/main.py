@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import pickle
 import json
 import dill
+import datetime
 import uuid
 import random
 import string
@@ -72,11 +73,15 @@ async def save_chat(user_id: str, chat_id: str, query: str, response: str):
     print(type(response))
     print("+=+=========================")
     print(response)
+    print("+=+=========================")
+    print(user_id,chat_id)
     chat_entry = json.dumps({"query": query, "response": str(response)})
     redis_client.lpush(f"chat_history:{user_id}:{chat_id}", chat_entry)
 
 async def get_chat_history(user_id: str, chat_id: str):
+    print("+=+=========================")
     history = redis_client.lrange(f"chat_history:{user_id}:{chat_id}", 0, -1)
+    print("Chat historyyyy",history)
     return [json.loads(entry) for entry in history] if history else []
 
 def _load_data(file_path: str) -> List[Document]:
@@ -189,10 +194,8 @@ def generate_temporary_user_id():
 async def start_chat(user_id: str = None):
     if not user_id:
         user_id = generate_temporary_user_id()
-    chat_id = redis_client.get(f"user:{user_id}:chat")
-    if not chat_id:
-        chat_id = generate_chat_id()
-        redis_client.set(f"user:{user_id}:chat", chat_id)
+    chat_id = generate_chat_id()
+    redis_client.sadd(f"user:{user_id}:chats", chat_id)
     return {"user_id": user_id, "chat_id": chat_id}
 
 
@@ -228,6 +231,15 @@ async def upload_files(
         "chat_id": chat_id,
         "document_id": user_document_id,
         }
+
+        filenames = [file.filename for file in files]
+        chat_metadata = {
+            "user_id": user_id,
+            "chat_id": chat_id,
+            "documents": filenames,
+            "created_at": datetime.datetime.now().isoformat(),
+        }
+        redis_client.set(f"chat:{chat_id}:metadata", json.dumps(chat_metadata))
         redis_client.set(f"document:{user_document_id}:metadata", json.dumps(metadata))
         redis_client.sadd(f"user:{user_id}:chat:{chat_id}:documents", user_document_id)
     
@@ -297,7 +309,21 @@ async def query_documents(
 @app.get("/chat-history/")
 async def get_chat_history_endpoint(user_id: str = Query(...), chat_id: str = Query(...)):
     history = await get_chat_history(user_id, chat_id)
+    print("+=+=========================")
+    print(history)
     return {"history": history}
+
+@app.get("/get_chats/")
+async def get_chats(user_id: str):
+    chat_ids = redis_client.smembers(f"user:{user_id}:chats")
+    chats = []
+    for chat_id in chat_ids:
+        metadata = redis_client.get(f"chat:{chat_id}:metadata")
+        if metadata:
+            chat_data = json.loads(metadata)
+            chats.append(chat_data)
+    chats.sort(key=lambda x: x["created_at"], reverse=True)
+    return {"chats": chats}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
