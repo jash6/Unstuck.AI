@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
-import { useUser } from "../context/UserContext";
 
 export default function ChatScreen() {
   const [searchVal, setSearchVal] = useState("");
@@ -131,7 +130,7 @@ export default function ChatScreen() {
               className={`p-3 my-2 rounded-lg max-w-[80%] shadow-sm ${
                 chat.sender === "user"
                   ? "bg-white text-gray-800 ml-auto"
-                  : "bg-white text-gray-800 mr-auto"
+                  : "text-gray-800 mr-auto"
               }`}
             >
               {chat.type === "thinking" ? (

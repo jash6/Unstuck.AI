@@ -1,30 +1,3 @@
-# import os
-# import shutil
-# from pathlib import Path
-# from typing import List, Optional, Dict, Any
-# from dotenv import load_dotenv
-# import json
-# import uuid
-
-# import uvicorn
-# from fastapi import FastAPI, UploadFile, File, Query, Form, HTTPException
-# from fastapi.middleware.cors import CORSMiddleware
-# from werkzeug.utils import secure_filename
-
-# from llama_index.llms.openai import OpenAI
-# from llama_index.embeddings.openai import OpenAIEmbedding
-# from llama_index.core import Settings, VectorStoreIndex, SummaryIndex
-# from llama_index.core.schema import Document
-# from llama_parse import LlamaParse
-# from llama_index.core.node_parser import SentenceSplitter
-# from llama_index.core.tools import FunctionTool, QueryEngineTool
-# from llama_index.core.vector_stores import MetadataFilters, FilterCondition
-# from llama_index.core.agent import ReActAgentWorker, AgentRunner
-# from llama_index.vector_stores.pinecone import PineconeVectorStore
-
-# from pinecone import Pinecone
-# from upstash_redis import Redis
-
 import os
 import shutil
 from pathlib import Path
@@ -104,13 +77,14 @@ async def get_chat_history(user_id: str, chat_id: str):
     return [json.loads(entry) for entry in history] if history else []
 
 def _load_data(file_path: str) -> List[Document]:
-    print(file_path)
-    parser = LlamaParse(result_type="markdown")
-    documents = parser.load_data(file_path)
-    print(documents)
+    parser = LlamaParse(result_type="text")
+    json_objs = parser.get_json_result(file_path)
     docs = []
-    for doc in documents:
-        docs.append(Document(text=doc.get_content(), metadata={"page_label": doc.metadata.get("page_label", "1")}))    
+    for json_obj in json_objs:
+        docs.extend([
+            Document(text=page["text"], metadata={"page_label": str(page["page"])})
+            for page in json_obj["pages"]
+        ])
     return docs
 
 
@@ -128,7 +102,8 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
                 MetadataFilter(key="user_id", value=str(user_id)),
                 MetadataFilter(key="chat_id", value=str(chat_id)),
                 MetadataFilter(key="user_document_id", value=str(user_document_id))
-            ]
+            ],
+            condition=FilterCondition.AND
         )
         try:
             query_engine = vector_index.as_query_engine(
@@ -143,7 +118,10 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
     
     vector_tool = FunctionTool.from_defaults(
         name=f"vector_{user_document_id}",
-        description=f"Query content from {document_name}",
+        description=(
+            f"Search for specific information in the document titled '{document_name}'. "
+            f"Use this for questions about: {document_name} or its content."
+        ),
         fn=vector_query
     )
     
@@ -154,14 +132,15 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
                 MetadataFilter(key="user_id", value=str(user_id)),
                 MetadataFilter(key="chat_id", value=str(chat_id)),
                 MetadataFilter(key="user_document_id", value=str(user_document_id))
-            ]
+            ],
+            condition=FilterCondition.AND
         )
         
         try:
             summary_query_engine = vector_index.as_query_engine(
                 response_mode="tree_summarize",
                 filters=filters,
-                similarity_top_k=2
+                similarity_top_k=5
             )
             response = summary_query_engine.query(query)
             return str(response) if response else "Unable to generate summary"
@@ -170,7 +149,10 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
     
     summary_tool = FunctionTool.from_defaults(
         name=f"summary_{user_document_id}",
-        description=f"Generate a comprehensive summary of {document_name}",
+        description=(
+            f"Generate comprehensive summaries of the document titled '{document_name}'. "
+            f"Use this when asked for summaries, overviews, or key points."
+        ),
         fn=summary_query
     )
     
@@ -213,17 +195,13 @@ async def upload_files(
         for doc in documents:
             doc.metadata.update({"user_id": user_id, "chat_id": chat_id, "user_document_id": user_document_id})
             nodes.extend(SentenceSplitter(chunk_size=1024).get_nodes_from_documents([doc]))
-        
-        
-        
+            
         for node in nodes:
             node.embedding = embed_model.get_text_embedding(node.get_content())
         
         vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
         vector_store.add(nodes)
 
-        for i in nodes:
-            print(i.metadata)
         metadata = {
         "filename": filename,
         "user_id": user_id,
@@ -231,19 +209,10 @@ async def upload_files(
         "document_id": user_document_id,
         }
         redis_client.set(f"document:{user_document_id}:metadata", json.dumps(metadata))
-        
-        # redis_client.hset(
-        #     f"document:{document_id}:metadata",
-        #     {"filename", filename,
-        #     "user_id", user_id,
-        #     "chat_id", chat_id,
-        #     "document_id", document_id}
-        # )
         redis_client.sadd(f"user:{user_id}:chat:{chat_id}:documents", user_document_id)
     
     return {"message": "Files uploaded successfully"}
 
-# Modify the query endpoint to configure agent properly
 @app.get("/query/")
 async def query_documents(
     query: str = Query(...),
@@ -251,17 +220,6 @@ async def query_documents(
     chat_id: str = Query(...)
 ):
     document_ids = redis_client.smembers(f"user:{user_id}:chat:{chat_id}:documents")
-    
-    # Always start with base LLM response capability
-    base_tools = [
-        FunctionTool.from_defaults(
-            name="general_llm",
-            description="Useful for answering general questions not specific to uploaded documents",
-            fn=lambda q: str(llm.complete(q))
-        )
-    ]
-
-    # Add document tools if available
     doc_tools = []
     for doc_id in document_ids:
         metadata = redis_client.get(f"document:{doc_id}:metadata")
@@ -272,19 +230,31 @@ async def query_documents(
             )
             doc_tools.extend([vector_tool, summary_tool])
 
-    # Create agent with proper configuration
     agent_worker = ReActAgentWorker.from_tools(
-        tools=base_tools + doc_tools,
+        tools= doc_tools,
         llm=llm,
-        max_iterations=15,  # Increased from default 10
+        max_iterations=15,
         verbose=True,
-        handle_parsing_errors=True  # Add error handling for tool parsing
+        handle_parsing_errors=True
     )
     agent = AgentRunner(agent_worker)
     
     try:
         response = agent.query(query)
         response_text = str(response)
+
+        evaluation_prompt = (
+            "Evaluate the quality of the following response to a user query. "
+            "If the response does not contain relevant information or is unclear, return 'BAD'. "
+            "Otherwise, return 'GOOD'.\n\n"
+            f"Query: {query}\nResponse: {response_text}\nEvaluation:"
+        )
+        evaluation_result = str(llm.complete(evaluation_prompt)).strip()
+
+        if evaluation_result == "BAD":
+            fallback_response = str(llm.complete(query))
+            response_text = str(fallback_response)
+
     except Exception as e:
         response_text = f"Error processing query: {str(e)}"
     
