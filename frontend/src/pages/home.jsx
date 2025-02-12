@@ -2,14 +2,25 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { Upload, Loader } from "lucide-react";
+
+const LoadingSpinner = () => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center h-full z-50">
+    <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center space-y-4">
+      <Loader className="w-8 h-8 text-purple-600 animate-spin" />
+      <p className="text-gray-700">Uploading your files...</p>
+    </div>
+  </div>
+);
 
 export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [searchVal, setSearchVal] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { user, logout } = useUser();
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const dropZoneRef = useRef(null);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
@@ -17,6 +28,34 @@ export default function Home() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
   };
 
   const handleDeleteFile = (index) => {
@@ -65,65 +104,78 @@ export default function Home() {
       setIsUploading(false);
     }
   };
+
   return (
-    <div
-      className={`w-full h-screen flex flex-col max-w-screen-md mx-auto px-4 py-6 justify-center`}
-    >
-      <>
+    <div className="w-full h-screen flex flex-col max-w-screen-md mx-auto px-4 py-6">
+      {isUploading && <LoadingSpinner />}
+      <div className="flex flex-col items-center justify-center h-full space-y-4 mt-8">
         <div className="text-center font-serif font-medium text-3xl text-gray-800 mb-4">
-          Hi, how can I help you today? 🤗
+          Hi, how can I help you today? 🚀
         </div>
-        <div className="w-full relative rounded-lg bg-white">
-          {/* Left: File Upload Trigger */}
-          <button
-            type="button"
-            className="absolute inset-y-0 left-0 flex items-center pl-3"
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            disabled={isUploading}
-          >
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="currentColor"
-              viewBox="0 0 512 512"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM232 368h48V344 280h64 24V232H344 280V168 144H232v24 64H168 144v48h24 64v64 24z" />
-            </svg>
-          </button>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-            <div className="flex items-center space-x-2">
+        <div
+          ref={dropZoneRef}
+          className={`w-full max-w-2xl p-8 border-2 border-dashed rounded-lg 
+            ${isDragging ? "border-purple-500 bg-purple-50" : "border-gray-300"}
+            transition-colors duration-200 ease-in-out`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <div className="flex flex-col items-center space-y-4">
+            <div className="p-4 bg-purple-100 rounded-full">
+              <Upload className="w-8 h-8 text-purple-600" />
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-medium text-purple-600">
+                Click to upload
+              </p>
+              <p className="text-sm text-gray-500">or drag and drop files</p>
+            </div>
+            <p className="text-sm text-gray-500">
+              Drop Slides, Lecture, Notes and start chatting
+            </p>
+          </div>
+        </div>
+
+        {selectedFiles.length > 0 && (
+          <div className="w-full max-w-2xl">
+            <div className="mt-4 space-y-2">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center space-x-1">
-                  <span className="text-sm">{file.name}</span>
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                >
+                  <span className="text-m text-gray-600">{file.name}</span>
                   <button
-                    type="button"
                     onClick={() => handleDeleteFile(index)}
-                    className="text-red-500 text-xs"
+                    className="text-red-500 hover:text-red-700"
                     disabled={isUploading}
                   >
                     ×
                   </button>
                 </div>
               ))}
-              <button
-                type="button"
-                className="text-xs bg-black text-white px-2 py-1 rounded"
-                onClick={handleUpload}
-                disabled={isUploading}
-              >
-                {isUploading ? "Uploading..." : "Upload"}
-              </button>
             </div>
+            <button
+              onClick={handleUpload}
+              disabled={isUploading}
+              className="mt-4 w-full bg-black text-white py-2 px-4 rounded-lg hover:bg-purple-700 disabled:bg-purple-300"
+            >
+              {isUploading ? "Uploading..." : "Upload Files"}
+            </button>
           </div>
-          <input
-            type="file"
-            multiple
-            ref={fileInputRef}
-            className="hidden"
-            onChange={handleFileChange}
-          />
-        </div>
-      </>
+        )}
+
+        <input
+          type="file"
+          multiple
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
     </div>
   );
 }

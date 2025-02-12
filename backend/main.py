@@ -69,7 +69,10 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Helper Functions
 async def save_chat(user_id: str, chat_id: str, query: str, response: str):
-    chat_entry = json.dumps({"query": query, "response": response})
+    print(type(response))
+    print("+=+=========================")
+    print(response)
+    chat_entry = json.dumps({"query": query, "response": str(response)})
     redis_client.lpush(f"chat_history:{user_id}:{chat_id}", chat_entry)
 
 async def get_chat_history(user_id: str, chat_id: str):
@@ -95,7 +98,7 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
     # Vector Query Tool
     def vector_query(query: str) -> str:
         if not query.strip():
-            return "Please provide a valid query"
+            return {"response": "Please provide a valid query", "sources": []}
             
         filters = MetadataFilters(
             filters=[
@@ -112,9 +115,19 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
                 response_mode="compact"
             )
             response = query_engine.query(query)
-            return str(response) if response else "No relevant information found"
+            if not response or not response.source_nodes:
+                return {"response": "No relevant information found", "sources": []}
+
+            sources = []
+            for node in response.source_nodes:
+                sources.append({
+                    "source_text": node.text[:200],
+                    "page_number": node.metadata.get("page_label", "Unknown"),
+                    "document_name": document_name
+                })
+            return {"response": str(response), "sources": sources}
         except Exception as e:
-            return f"Error querying document: {str(e)}"
+            return {"response": f"Error querying document: {str(e)}", "sources": []}
     
     vector_tool = FunctionTool.from_defaults(
         name=f"vector_{user_document_id}",
@@ -143,9 +156,16 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
                 similarity_top_k=5
             )
             response = summary_query_engine.query(query)
-            return str(response) if response else "Unable to generate summary"
+            sources = []
+            for node in response.source_nodes:
+                sources.append({
+                    "source_text": node.text[:50],
+                    "page_number": node.metadata.get("page_label", "Unknown"),
+                    "document_name": document_name
+                })
+            return {"response": str(response), "sources": sources}
         except Exception as e:
-            return f"Error generating summary: {str(e)}"
+            return {"response": f"Error querying document: {str(e)}", "sources": []}
     
     summary_tool = FunctionTool.from_defaults(
         name=f"summary_{user_document_id}",
@@ -240,8 +260,20 @@ async def query_documents(
     agent = AgentRunner(agent_worker)
     
     try:
-        response = agent.query(query)
-        response_text = str(response)
+        response_text = agent.query(query)
+        sources = []
+        for tool in doc_tools:
+            if isinstance(tool, FunctionTool):
+                # Check if the function corresponds to vector query or summary query
+                if tool.fn.__name__ == 'vector_query':  # For vector query function
+                    vector_response = tool.fn(query)  # Await if it's an async function
+                    if "sources" in vector_response:
+                        sources.extend(vector_response["sources"])
+                
+                elif tool.fn.__name__ == 'summary_query':  # For summary query function
+                    summary_response = tool.fn(query)
+                    if "sources" in summary_response:
+                        sources.extend(summary_response["sources"])
 
         evaluation_prompt = (
             "Evaluate the quality of the following response to a user query. "
@@ -257,9 +289,10 @@ async def query_documents(
 
     except Exception as e:
         response_text = f"Error processing query: {str(e)}"
+        sources = []
     
     await save_chat(user_id, chat_id, query, response_text)
-    return {"response": response_text}
+    return {"response": response_text, "sources": sources}
 
 @app.get("/chat-history/")
 async def get_chat_history_endpoint(user_id: str = Query(...), chat_id: str = Query(...)):

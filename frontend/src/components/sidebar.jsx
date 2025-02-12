@@ -59,19 +59,16 @@ const Sidebar = ({
               <ArrowLeftLine />
             </button>
           </div>
-          <div className="my-md pt-two">
-            <div>
-              <div className="mx-md">
-                <div
-                  className="bg-background rounded-full pl-4 pr-2 py-2 flex flex-none justify-between items-center cursor-pointer hover:border-primary border-2 hover:!ring-super transition duration-300 select-none border-offsetPlus"
-                  onClick={() => navigate("/")}
-                >
-                  <div className="text-clip overflow-hidden line-clamp-1 font-sans text-sm font-medium text-extradark-gray">
-                    New Thread
-                  </div>
-                </div>
+          <div className="mx-3 mt-4 hidden md:block">
+            <button
+              type="button"
+              className="bg-primary text-white hover:opacity-80 font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-in-out  select-none  relative group  justify-center text-center items-center rounded-full cursor-point active:scale-95 origin-center whitespace-nowrap flex w-full text-base px-1 font-medium h-10"
+              onClick={() => navigate("/")}
+            >
+              <div className="flex items-center leading-none justify-center gap-xs">
+                <div className="text-align-center relative">New Thread</div>
               </div>
-            </div>
+            </button>
           </div>
           <nav className="flex-grow">
             <ul
@@ -115,19 +112,6 @@ const Sidebar = ({
                 );
               })}
             </ul>
-            {!user && (
-              <div className="mx-3 mt-4 hidden md:block">
-                <button
-                  type="button"
-                  className="bg-primary text-white hover:opacity-80 font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-in-out  select-none  relative group  justify-center text-center items-center rounded-full cursor-point active:scale-95 origin-center whitespace-nowrap flex w-full text-base px-1 font-medium h-10"
-                  onClick={() => setShowLoginPop(true)}
-                >
-                  <div className="flex items-center leading-none justify-center gap-xs">
-                    <div className="text-align-center relative">Sign Up</div>
-                  </div>
-                </button>
-              </div>
-            )}
           </nav>
 
           <div
@@ -137,13 +121,6 @@ const Sidebar = ({
           >
             {user && (
               <div className="flex gap-2 items-center h-11  my-2 overflow-hidden">
-                <img
-                  src={user?.picture}
-                  height={36}
-                  width={36}
-                  alt="profile image"
-                  className="rounded-full"
-                />
                 {!collapsed && (
                   <a href="/" className="text-textMain font-medium text-sm">
                     {user?.username}

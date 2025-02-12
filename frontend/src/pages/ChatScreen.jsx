@@ -2,6 +2,22 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useParams, useLocation } from "react-router-dom";
 
+const SourceBox = ({ source }) => (
+  <div className="flex-1 min-w-[200px] max-w-[250px] bg-extradark-gray rounded-lg p-1 hover:bg-primary transition-colors cursor-pointer outline-solid">
+    <div className="text-xs font-small text-gray-900 truncate">
+      {source.document_name}
+    </div>
+    <div className="text-xs text-gray-500 mt-1 truncate">
+      {source.source_text}
+    </div>
+    {source.page_number && (
+      <div className="text-xs text-gray-400 mt-1">
+        Page {source.page_number}
+      </div>
+    )}
+  </div>
+);
+
 export default function ChatScreen() {
   const [searchVal, setSearchVal] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
@@ -87,7 +103,8 @@ export default function ChatScreen() {
         const newHistory = [...prev];
         newHistory[newHistory.length - 1] = {
           sender: "bot",
-          message: data.response,
+          message: data.response.response ?? data.response,
+          sources: data.sources,
         };
         return newHistory;
       });
@@ -122,38 +139,51 @@ export default function ChatScreen() {
       <div>
         <div
           ref={chatContainerRef}
-          className="flex-1 bg-gray-100 p-4 rounded-lg overflow-y-auto h-96 mb-4"
+          className="flex-1 bg-gray-100 p-4 rounded-lg overflow-y-auto h-96"
         >
           {chatHistory.map((chat, index) => (
             <div
               key={index}
-              className={`p-3 my-2 rounded-lg max-w-[80%] shadow-sm ${
+              className={`p-3 my-2 rounded-2xl shadow-sm ${
                 chat.sender === "user"
-                  ? "bg-white text-gray-800 ml-auto"
-                  : "text-gray-800 mr-auto"
+                  ? "bg-extradark-gray max-w-[70%] text-white ml-auto"
+                  : "text-white mr-auto"
               }`}
             >
               {chat.type === "thinking" ? (
                 <div className="flex items-center gap-2">
                   <span>{chat.message}</span>
-                  {/* Simple animated spinner */}
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-black rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-black rounded-full animate-bounce delay-100"></div>
-                    <div className="w-2 h-2 bg-black rounded-full animate-bounce delay-200"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-100"></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce delay-200"></div>
                   </div>
                 </div>
               ) : (
-                <span>{chat.message}</span>
+                <>
+                  <span>{chat.message}</span>
+                  {chat.sources && chat.sources.length > 0 && (
+                    <>
+                      <div className="text-left font-small text-xs text-gray-800 mt-3">
+                        Sources
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto">
+                        {chat.sources.map((source, sourceIndex) => (
+                          <SourceBox key={sourceIndex} source={source} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
               )}
             </div>
           ))}
         </div>
       </div>
-      <div className="w-full relative rounded-lg bg-white">
+      <div className="w-full relative rounded-2xl">
         <textarea
           placeholder="Ask anything..."
-          className="w-full p-3 pl-12 pr-12 text-black resize-none h-24 focus:outline-none"
+          className="w-full p-3 pl-12 pr-12 rounded-2xl bg-extradark-gray text-white resize-none h-18 focus:outline-none"
           value={searchVal}
           onChange={(e) => setSearchVal(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -166,7 +196,7 @@ export default function ChatScreen() {
           disabled={isUploading || isThinking}
         >
           <svg
-            className="w-5 h-5 text-gray-600"
+            className="w-5 h-5 bg-primary rounded-2xl text-gray-600"
             fill="currentColor"
             viewBox="0 0 512 512"
             xmlns="http://www.w3.org/2000/svg"
@@ -191,7 +221,7 @@ export default function ChatScreen() {
               ))}
               <button
                 type="button"
-                className="text-xs bg-black text-white px-2 py-1 rounded"
+                className="text-xs bg-primary text-white px-2 py-1 rounded"
                 onClick={handleUpload}
                 disabled={isUploading}
               >
@@ -207,7 +237,7 @@ export default function ChatScreen() {
             disabled={isThinking || !searchVal.trim()}
           >
             <svg
-              className="w-5 h-5 text-gray-600"
+              className="w-5 h-5 bg-primary rounded-2xl text-gray-600"
               fill="currentColor"
               viewBox="0 0 448 512"
               xmlns="http://www.w3.org/2000/svg"

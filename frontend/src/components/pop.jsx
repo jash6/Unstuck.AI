@@ -80,46 +80,6 @@ export const LoginPop = ({ closePop }) => {
                       <GoogleIcon className="w-5 h-4" />
                       Continue with Google
                     </button>
-                    <button
-                      type="button"
-                      className="bg-offsetPlus gap-xs text-textMain md:hover:text-textOff  font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-in-out  select-none relative group  justify-center text-center items-center rounded-full cursor-point active:scale-95 origin-center whitespace-nowrap flex w-full text-base px-md font-medium h-10"
-                      onClick={() =>
-                        window.alert("Will be implemented in Future!!")
-                      }
-                    >
-                      <AppleIcon className="w-5 h-4" />
-                      Continue with Apple
-                    </button>
-                  </div>
-                  <div className="border-t mt-md space-y-sm pt-md border-borderMain">
-                    <div className="rounded-full">
-                      <div className="relative flex items-center">
-                        <input
-                          type="email"
-                          placeholder="henry@example.com"
-                          className="w-full outline-none focus:outline-none focus:ring-borderMain 
-                      font-sans flex items-center
-                      selection:bg-superDuper selection:text-textMain duration-200 
-                      transition-all bg-background border text-textMain 
-                      border-borderMain focus:ring-1 
-                      placeholder-textOff rounded-t-[32px] 
-                      rounded-b-[32px] py-sm text-sm px-md pr-md"
-                          autoComplete="off"
-                          value=""
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-center">
-                      <button
-                        type="button"
-                        className="text-extradark-gray text-sm transition duration-300 ease-in-out cursor-point active:scale-95 px-md font-medium h-10"
-                        onClick={() =>
-                          window.alert("Email will be implemented in future")
-                        }
-                      >
-                        Continue with Email
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
