@@ -109,12 +109,12 @@ export default function Home() {
     <div className="w-full h-screen flex flex-col max-w-screen-md mx-auto px-4 py-6">
       {isUploading && <LoadingSpinner />}
       <div className="flex flex-col items-center justify-center h-full space-y-4 mt-8">
-        <div className="text-center font-serif font-medium text-3xl text-gray-800 mb-4">
+        <div className="text-center font-serif font-medium text-3xl text-primary mb-4">
           Hi, how can I help you today? 🚀
         </div>
         <div
           ref={dropZoneRef}
-          className={`w-full max-w-2xl p-8 border-2 border-dashed rounded-lg 
+          className={`w-full max-w-2xl p-3 border-2 border-dashed rounded-lg bg-extradark-gray
             ${isDragging ? "border-purple-500 bg-purple-50" : "border-gray-300"}
             transition-colors duration-200 ease-in-out`}
           onDragEnter={handleDragEnter}
@@ -124,16 +124,14 @@ export default function Home() {
           onClick={() => fileInputRef.current?.click()}
         >
           <div className="flex flex-col items-center space-y-4">
-            <div className="p-4 bg-purple-100 rounded-full">
-              <Upload className="w-8 h-8 text-purple-600" />
+            <div className="p-2 bg-purple-100 rounded-full">
+              <Upload className="w-8 h-8 text-white" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-medium text-purple-600">
-                Click to upload
-              </p>
-              <p className="text-sm text-gray-500">or drag and drop files</p>
+              <p className="text-m font-medium text-black">Click to upload</p>
+              <p className="text-sm text-black">or drag and drop files</p>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-black">
               Drop Slides, Lecture, Notes and start chatting
             </p>
           </div>
