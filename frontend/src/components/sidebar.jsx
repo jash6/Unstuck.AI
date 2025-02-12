@@ -4,7 +4,7 @@ import { defaultNavItems } from "./sideItems";
 import { ArrowLeftLine } from "./svg";
 import { useUser } from "../context/UserContext";
 import { LoginPop } from "./pop";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Sidebar = ({
   collapsed,
@@ -17,6 +17,7 @@ const Sidebar = ({
 }) => {
   const { user } = useUser();
   const [showLoginPop, setShowLoginPop] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -63,7 +64,7 @@ const Sidebar = ({
               <div className="mx-md">
                 <div
                   className="bg-background rounded-full pl-4 pr-2 py-2 flex flex-none justify-between items-center cursor-pointer hover:border-primary border-2 hover:!ring-super transition duration-300 select-none border-offsetPlus"
-                  onClick={() => showSearchPopOverlay()}
+                  onClick={() => navigate("/")}
                 >
                   <div className="text-clip overflow-hidden line-clamp-1 font-sans text-sm font-medium text-extradark-gray">
                     New Thread

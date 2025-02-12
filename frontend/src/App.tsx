@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout";
 import Home from "./pages/home";
 import Onboarding from "./pages/onboarding.jsx";
-import Search from "./pages/search";
+import ChatScreen from "./pages/chatScreen";
 import { UserProvider } from "./context/UserContext.jsx";
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/search" element={<Search />} />
+            <Route path="/chat/:chatId" element={<ChatScreen />} />
           </Routes>
         </Layout>
       </Router>

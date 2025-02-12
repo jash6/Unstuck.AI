@@ -34,6 +34,8 @@ import pickle
 import json
 import dill
 import uuid
+import random
+import string
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, Query, Depends, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -102,15 +104,15 @@ async def get_chat_history(user_id: str, chat_id: str):
     return [json.loads(entry) for entry in history] if history else []
 
 def _load_data(file_path: str) -> List[Document]:
-    parser = LlamaParse(result_type="text")
-    json_objs = parser.get_json_result(file_path)
+    print(file_path)
+    parser = LlamaParse(result_type="markdown")
+    documents = parser.load_data(file_path)
+    print(documents)
     docs = []
-    for json_obj in json_objs:
-        docs.extend([
-            Document(text=page["text"], metadata={"page_label": str(page["page"])})
-            for page in json_obj["pages"]
-        ])
+    for doc in documents:
+        docs.append(Document(text=doc.get_content(), metadata={"page_label": doc.metadata.get("page_label", "1")}))    
     return docs
+
 
 def create_document_tools(user_id: str, chat_id: str, user_document_id: str, document_name: str):
     vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
@@ -174,9 +176,24 @@ def create_document_tools(user_id: str, chat_id: str, user_document_id: str, doc
     
     return vector_tool, summary_tool
 
-    
+def generate_chat_id():
+    return str(uuid.uuid4())
+
+def generate_temporary_user_id():
+    return "guest_" + ''.join(random.choices(string.ascii_letters + string.digits, k=8))
 
 # API Endpoints
+@app.get("/start_chat/")
+async def start_chat(user_id: str = None):
+    if not user_id:
+        user_id = generate_temporary_user_id()
+    chat_id = redis_client.get(f"user:{user_id}:chat")
+    if not chat_id:
+        chat_id = generate_chat_id()
+        redis_client.set(f"user:{user_id}:chat", chat_id)
+    return {"user_id": user_id, "chat_id": chat_id}
+
+
 @app.post("/upload/")
 async def upload_files(
     files: List[UploadFile] = File(...),
@@ -225,9 +242,6 @@ async def upload_files(
         redis_client.sadd(f"user:{user_id}:chat:{chat_id}:documents", user_document_id)
     
     return {"message": "Files uploaded successfully"}
-
-@app.get("/query/")
-
 
 # Modify the query endpoint to configure agent properly
 @app.get("/query/")
