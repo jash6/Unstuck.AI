@@ -41,7 +41,7 @@ export default function ChatScreen() {
     const loadChat = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:8000/chat-history/",
+          "https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/chat-history/",
           {
             params: { user_id: userId, chat_id: chatId },
           }
@@ -87,7 +87,7 @@ export default function ChatScreen() {
         formData.append("files", file);
       });
       const { data } = await axios.post(
-        "http://localhost:8000/upload/",
+        "https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/upload/",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -116,13 +116,16 @@ export default function ChatScreen() {
     setChatHistory((prev) => [...prev, thinkingMessage]);
     setIsThinking(true);
     try {
-      const { data } = await axios.get("http://localhost:8000/query/", {
-        params: {
-          query: searchVal,
-          user_id: userId,
-          chat_id: chatId,
-        },
-      });
+      const { data } = await axios.get(
+        "https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/query/",
+        {
+          params: {
+            query: searchVal,
+            user_id: userId,
+            chat_id: chatId,
+          },
+        }
+      );
       setChatHistory((prev) => {
         const newHistory = [...prev];
         newHistory[newHistory.length - 1] = {

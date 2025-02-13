@@ -77,8 +77,8 @@ export default function Home() {
           ? localStorage.getItem("guestUserId")
           : null;
       const startChatUrl = userId
-        ? `http://localhost:8000/start_chat/?user_id=${userId}`
-        : "http://localhost:8000/start_chat/";
+        ? `https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/start_chat/?user_id=${userId}`
+        : "https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/start_chat/";
 
       const response = await fetch(startChatUrl);
       const chatdata = await response.json();
@@ -95,7 +95,7 @@ export default function Home() {
         formData.append("files", file);
       });
       const { data } = await axios.post(
-        "http://localhost:8000/upload/",
+        "https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/upload/",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

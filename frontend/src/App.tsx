@@ -1,11 +1,10 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Layout from "./components/layout";
-import Home from "./pages/home";
+import Layout from "./components/layout.jsx";
+import Home from "./pages/home.jsx";
 import Onboarding from "./pages/onboarding.jsx";
-import ChatScreen from "./pages/chatScreen";
-import { UserProvider } from "./context/UserContext.jsx";
-import { ChatProvider } from "./context/ChatContext";
+import ChatScreen from "./pages/chatScreen.jsx";
+import UserProvider from "./context/UserContext.jsx";
+import ChatProvider from "./context/ChatContext.jsx";
 
 function App() {
   return (
