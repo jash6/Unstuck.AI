@@ -1,0 +1,10 @@
+dill==0.3.9
+fastapi==0.115.8
+llama_index==0.12.17
+llama_parse==0.6.1
+nest_asyncio==1.6.0
+pinecone==6.0.1
+python-dotenv==1.0.1
+upstash_redis==1.2.0
+uvicorn==0.34.0
+Werkzeug==3.1.3
