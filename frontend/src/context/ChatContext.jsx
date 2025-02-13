@@ -17,6 +17,7 @@ export const ChatProvider = ({ children }) => {
   );
 };
 
+export default ChatProvider;
 export const useChatContext = () => {
   return useContext(ChatContext);
 };
