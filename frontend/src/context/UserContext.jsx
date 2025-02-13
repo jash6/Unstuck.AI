@@ -33,6 +33,7 @@ export const UserProvider = ({ children }) => {
   );
 };
 
+export default UserProvider;
 export const useUser = () => {
   return useContext(UserContext);
 };
