@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout.jsx";
 import Home from "./pages/home.jsx";
 import Onboarding from "./pages/onboarding.jsx";
-import ChatScreen from "./pages/chatScreen.jsx";
+import ChatScreen from "./pages/ChatScreen.jsx";
 import UserProvider from "./context/UserContext.jsx";
 import ChatProvider from "./context/ChatContext.jsx";
 
