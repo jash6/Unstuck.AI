@@ -35,7 +35,7 @@ const Sidebar = ({
         try {
           if (!userId) return;
           const response = await axios.get(
-            `https://wr5kffmhy5zsebmr7kzftu2hxa0hmybu.lambda-url.us-east-1.on.aws/get_chats/?user_id=${userId}`
+            `http://98.81.136.247/api/get_chats/?user_id=${userId}`
           );
           setChats(response.data.chats);
         } catch (error) {
