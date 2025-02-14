@@ -1,0 +1,15 @@
+dill
+fastapi
+llama_index
+llama_parse
+nest_asyncio
+pinecone==5.4.2
+python-dotenv
+upstash_redis
+uvicorn
+Werkzeug
+mangum
+aws_lambda_powertools
+boto3
+botocore
+aws_xray_sdk
