@@ -41,7 +41,7 @@ export default function ChatScreen() {
     const loadChat = async () => {
       try {
         const { data } = await axios.get(
-          "http://98.81.136.247/api/chat-history/",
+          "https://x8fm0fmdrg.execute-api.us-east-1.amazonaws.com/api/chat-history/",
           {
             params: { user_id: userId, chat_id: chatId },
           }
@@ -87,7 +87,7 @@ export default function ChatScreen() {
         formData.append("files", file);
       });
       const { data } = await axios.post(
-        "http://98.81.136.247/api/upload/",
+        "https://x8fm0fmdrg.execute-api.us-east-1.amazonaws.com/api/upload/",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -116,13 +116,16 @@ export default function ChatScreen() {
     setChatHistory((prev) => [...prev, thinkingMessage]);
     setIsThinking(true);
     try {
-      const { data } = await axios.get("http://98.81.136.247/api/query/", {
-        params: {
-          query: searchVal,
-          user_id: userId,
-          chat_id: chatId,
-        },
-      });
+      const { data } = await axios.get(
+        "https://x8fm0fmdrg.execute-api.us-east-1.amazonaws.com/api/query/",
+        {
+          params: {
+            query: searchVal,
+            user_id: userId,
+            chat_id: chatId,
+          },
+        }
+      );
       setChatHistory((prev) => {
         const newHistory = [...prev];
         newHistory[newHistory.length - 1] = {
